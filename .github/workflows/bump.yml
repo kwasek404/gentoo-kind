@@ -1,0 +1,30 @@
+name: bump
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+    inputs:
+      target_tag:
+        description: "Upstream tag to bump to (default: latest stable release)"
+        required: false
+        default: ""
+      dry_run:
+        description: "Stage changes only, do not push or create a release"
+        type: boolean
+        default: true
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Bump kind ebuild
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_TAG: ${{ inputs.target_tag }}
+          DRY_RUN: ${{ (github.event_name == 'schedule') && '0' || (inputs.dry_run && '1' || '0') }}
+          GOLANG_IMAGE: golang:1.26.7@sha256:e30143be198ab04cf7ba25fba83ab3a692ca584c994aad0bf131fa0eb32dd8c1
+        run: bash scripts/bump.sh
